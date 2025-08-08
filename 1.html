@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>小雪生日快乐 ✨</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #0b0f3c, #1a1a4a);
+            color: #fff;
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .birthday-title {
+            font-size: 3.5rem;
+            margin: 2rem 0;
+            text-shadow: 0 0 15px #9d72ff;
+        }
+
+        .message-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        #firework-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .blessing-text {
+            font-size: 1.2rem;
+            line-height: 2;
+            opacity: 0;
+            animation: fadeInUp 1s 0.5s forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .birthday-title { font-size: 2.5rem; }
+            .message-box { margin: 1rem; padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="firework-canvas"></canvas>
+    
+    <div class="container">
+        <h1 class="birthday-title">✨ 小雪生日快乐 ✨</h1>
+        
+        <div class="message-box">
+            <p class="blessing-text">
+                星河为幕，烟花为贺<br>
+                愿新岁的每一刻都璀璨如星<br>
+                梦想如烟火照亮整个夜空<br>
+                在这特别的日子里<br>
+                让宇宙见证我最真挚的祝福<br>
+                小雪，生日快乐！🎂
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // 烟花特效实现
+        class Firework {
+            constructor(canvas, ctx) {
+                this.canvas = canvas;
+                this.ctx = ctx;
+                this.particles = [];
+                this.hue = 120;
+            }
+
+            launch(x, y) {
+                // 烟花升空
+                const targetY = y - this.canvas.height * 0.3;
+                const riseParticle = {
+                    x: x,
+                    y: this.canvas.height,
+                    color: `hsl(${this.hue}, 100%, 50%)`,
+                    speed: -8,
+                    alpha: 1
+                };
+
+                const riseAnimation = () => {
+                    riseParticle.y += riseParticle.speed;
+                    this.ctx.beginPath();
+                    this.ctx.arc(riseParticle.x, riseParticle.y, 2, 0, Math.PI * 2);
+                    this.ctx.fillStyle = riseParticle.color;
+                    this.ctx.fill();
+
+                    if (riseParticle.y <= targetY) {
+                        this.explode(riseParticle.x, riseParticle.y);
+                        return;
+                    }
+                    requestAnimationFrame(riseAnimation);
+                };
+                riseAnimation();
+            }
+
+            explode(x, y) {
+                // 烟花爆炸效果
+                for (let i = 0; i < 100; i++) {
+                    this.particles.push({
+                        x: x,
+                        y: y,
+                        color: `hsl(${this.hue + i * 3}, 100%, 50%)`,
+                        speed: {
+                            x: Math.cos((i * 3.6) * Math.PI / 180) * Math.random() * 8,
+                            y: Math.sin((i * 3.6) * Math.PI / 180) * Math.random() * 8
+                        },
+                        alpha: 1,
+                        gravity: 0.02
+                    });
+                }
+            }
+
+            update() {
+                // 更新粒子状态
+                this.particles = this.particles.filter(particle => {
+                    particle.x += particle.speed.x;
+                    particle.y += particle.speed.y;
+                    particle.speed.y += particle.gravity;
+                    particle.alpha -= 0.008;
+
+                    this.ctx.beginPath();
+                    this.ctx.arc(particle.x, particle.y, 1.5, 0, Math.PI * 2);
+                    this.ctx.fillStyle = `hsla(${particle.color.split(",")[0].split("(")[1]}, ${particle.alpha})`;
+                    this.ctx.fill();
+
+                    return particle.alpha > 0;
+                });
+            }
+        }
+
+        // 初始化画布
+        const canvas = document.getElementById('firework-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const fireworks = [];
+        let lastLaunch = 0;
+
+        // 动画循环
+        function animate() {
+            ctx.fillStyle = 'rgba(11, 15, 60, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const now = Date.now();
+            if (now - lastLaunch > 2000) { // 每2秒发射一个烟花
+                const x = Math.random() * canvas.width;
+                fireworks.push(new Firework(canvas, ctx));
+                fireworks[fireworks.length - 1].launch(x, canvas.height * 0.7);
+                lastLaunch = now;
+            }
+
+            fireworks.forEach(firework => firework.update());
+            requestAnimationFrame(animate);
+        }
+
+        // 窗口大小调整
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        animate();
+    </script>
+</body>
+</html>
